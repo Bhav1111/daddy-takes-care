@@ -1,0 +1,61 @@
+<title>Daddy Takes Care</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Andika:ital,wght@0,400;0,700;1,400&family=Nunito:wght@500;700;800&display=swap">
+<style>
+{{STYLE}}
+</style>
+<div class="book tone-dawn cover" id="book">
+  <div class="spread" id="spread" aria-label="Book pages"></div>
+  <nav class="controls" aria-label="Book controls">
+    <button class="cbtn" id="btnHome" aria-label="Back to the cover"><svg viewBox="0 0 24 24"><path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg></button>
+    <button class="cbtn nav" id="btnPrev" aria-label="Previous page"><svg viewBox="0 0 24 24"><path d="M15.5 5 8 12l7.5 7z"/></svg></button>
+    <button class="cbtn big nav" id="btnPlay" aria-label="Read this page"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+    <button class="cbtn nav" id="btnNext" aria-label="Next page"><svg viewBox="0 0 24 24"><path d="M8.5 5 16 12l-7.5 7z"/></svg></button>
+    <span class="spacer"></span>
+    <button class="pill" id="btnMode"><span class="dotv"></span>Read to me</button>
+    <button class="cbtn" id="btnGrown" aria-label="For the grown-ups"><svg viewBox="0 0 24 24"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2-1.5-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5H9l-.3 2.6a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L4.6 11a7.5 7.5 0 0 0 0 2l-2 1.5 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1L9 20.5h6l.3-2.6a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg></button>
+    <button class="cbtn" id="btnFull" aria-label="Full screen"><svg viewBox="0 0 24 24"><path d="M4 4h6v2H6v4H4zm10 0h6v6h-2V6h-4zM4 14h2v4h4v2H4zm14 0h2v6h-6v-2h4z"/></svg></button>
+  </nav>
+  <div class="fx" id="fx" aria-hidden="true"></div>
+  <div class="toast" id="toast" role="status" hidden></div>
+  <div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="sheet">
+      <div class="sheet-head">
+        <div><h2 id="modalTitle">For the grown-ups</h2></div>
+        <button class="x" id="modalClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg></button>
+      </div>
+      <p>This book is told from the baby’s side of the crib. Read it the way the day goes: bright and playful in the morning, softer and slower at bedtime. A baby doesn’t need a silent house. They need your voice, your face, and the same small rituals, repeated with love. That’s what “no shhh’s needed” means.</p>
+      <section class="opt">
+        <h3>Who reads</h3>
+        <div class="seg" id="segNarrator">
+          <button data-v="story" aria-pressed="true">Storyteller</button>
+          <button data-v="dad" aria-pressed="false">Daddy’s voice</button>
+          <button data-v="device" aria-pressed="false">This device</button>
+        </div>
+        <div class="row" id="rowVoice" hidden><span>Device voice<small>Voices installed on this device</small></span><select id="voiceSel" aria-label="Device voice"></select></div>
+      </section>
+      <section class="opt">
+        <h3>Reading</h3>
+        <div class="row"><span>Turn pages by itself<small>After each page is read aloud</small></span><button class="switch" data-set="auto" role="switch" aria-checked="true" aria-label="Turn pages by itself"></button></div>
+        <div class="row"><span>Look around<small>Move the mouse or tilt the phone to peek into each scene</small></span><button class="switch" data-set="motion" role="switch" aria-checked="true" aria-label="Look around"></button></div>
+        <div class="row"><span>Page sounds<small>A soft paper turn and a chime or two</small></span><button class="switch" data-set="sounds" role="switch" aria-checked="true" aria-label="Page sounds"></button></div>
+        <div class="row"><span>White noise at bedtime<small>A gentle hush on the story-time pages. Tap the little machine on the nightstand, too.</small></span><button class="switch" data-set="noise" role="switch" aria-checked="false" aria-label="White noise at bedtime"></button></div>
+        <div class="row"><span>Highlight timing<small>Nudge if words light up early or late · <span id="nudgeVal">0 ms</span></small></span><input class="range" id="nudge" type="range" min="-400" max="400" step="20" value="0" aria-label="Highlight timing in milliseconds"></div>
+      </section>
+      <section class="opt">
+        <h3>Daddy’s voice</h3>
+        <p>Record yourself reading each page. Choose “Daddy’s voice” above and the book reads in your voice, lighting up each word as you go. Recordings stay on this device.</p>
+        <div class="prompter" id="prompter" hidden></div>
+        <div class="rec-list" id="recList"></div>
+      </section>
+    </div>
+  </div>
+</div>
+<script type="application/json" id="narration-data">{{DATA}}</script>
+<script>
+{{ART}}
+</script>
+<script>
+{{APP}}
+</script>

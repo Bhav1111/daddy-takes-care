@@ -1,0 +1,11 @@
+.venv-tts/
+.claude/
+build/cache/
+build/samples/
+build/*.wav
+build/*.mp3
+build/*.log
+build/narration-samantha.json
+dist/
+Daddy Takes Care.html
+.DS_Store
