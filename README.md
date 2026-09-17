@@ -7,7 +7,7 @@ Words by Baruch Havia.
 
 The book reads itself aloud, lights up every word as it is spoken, and lets Dad record his own narration (recordings stay on the device).
 
-It is built like a pop-up book: each page's cut-paper layers unfold when the page opens, every page has a pull tab that moves the picture (the story pulls it by itself at the right word), there are flaps to lift (a door, a bowl lid, a curtain, Dad's storybook, a moon that hides a sleeping sun) and wheels to spin (suns, a mobile, the night sky).
+It is built like a pop-up book: each page's cut-paper layers unfold when the page opens, every page has a pull tab that moves the picture (the story pulls it by itself at the right word), there are flaps to lift (a door, a bowl lid, a curtain, Dad's storybook, a moon that hides a sleeping sun) and wheels to spin (suns, a mobile, the night sky). Almost everything answers a tap: suns grow faces, jars rattle, blocks spell DAD, the lamp switches off to reveal glow-in-the-dark stars, stars join into a constellation, the house opens and its bunny hops out. Tapping a word in the text makes the thing it names react, and a tap on empty page sparkles.
 
 ## Layout
 

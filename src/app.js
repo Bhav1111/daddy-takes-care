@@ -39,6 +39,7 @@ const SHAPES = {
   note: '<svg viewBox="-14 -14 28 28"><ellipse cx="-4" cy="7" rx="6" ry="4.5" fill="#4F5BB8"/><path d="M1 7V-10l10 3v4l-8-2.4V7z" fill="#4F5BB8"/></svg>',
   zzz: '<svg viewBox="-14 -14 28 28"><text x="0" y="6" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="20" fill="#9FA3D6">z</text></svg>',
   poof: '<svg viewBox="-14 -14 28 28"><circle r="10" fill="#E8E1F5"/></svg>',
+  firefly: '<svg viewBox="-14 -14 28 28"><circle r="9" fill="#FFE58A" opacity=".35"/><circle r="3.5" fill="#FFF3B0"/></svg>',
   shh: '<svg viewBox="-20 -14 40 28"><text x="0" y="5" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="14" fill="#9FA3D6">shh</text><path d="M-14 6 14-6" stroke="#F26D85" stroke-width="3" stroke-linecap="round"/></svg>',
 };
 function spawn(kind, x, y, count = 6) {
@@ -96,6 +97,20 @@ const Sound = {
   flip() { if (settings.sounds) this.burst(0.22, 700, 1600, 0.12); },
   pop() { if (!settings.sounds) return; const c = this.ensure(); if (!c) return; const o = c.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(240, c.currentTime); o.frequency.exponentialRampToValueAtTime(520, c.currentTime + 0.12); const g = c.createGain(); g.gain.setValueAtTime(0.0001, c.currentTime); g.gain.exponentialRampToValueAtTime(0.14, c.currentTime + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.3); o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime + 0.32); },
   rise() { if (!settings.sounds) return; [0, 140, 300].forEach((d, i) => setTimeout(() => this.burst(0.28, 400 + i * 200, 1400 + i * 300, 0.07, 0.6), d)); },
+  tone(freq, t0, dur, gain = 0.08, type = 'sine') { const c = this.ctx; const o = c.createOscillator(); o.type = type; o.frequency.value = freq; const g = c.createGain(); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(gain, t0 + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); o.connect(g).connect(c.destination); o.start(t0); o.stop(t0 + dur + 0.05); },
+  seq(notes, step = 0.12, dur = 0.35, gain = 0.07, type = 'sine') { if (!settings.sounds) return; const c = this.ensure(); if (!c) return; notes.forEach((f, i) => this.tone(f, c.currentTime + i * step, dur, gain, type)); },
+  giggle() { this.seq([880, 1046.5, 1318.5, 1568], 0.07, 0.18, 0.06, 'triangle'); },
+  hum() { this.seq([392, 440, 392], 0.26, 0.6, 0.045); },
+  twinkle() { this.seq([1568, 1975.5, 2349.3, 2637], 0.06, 0.5, 0.04); },
+  chirp() { this.seq([2200, 2800, 2400, 2900], 0.07, 0.12, 0.045); },
+  lullaby() { this.seq([523.25, 587.33, 659.25, 587.33, 523.25, 392], 0.28, 0.7, 0.05); },
+  brr() { this.seq([330, 311, 330, 311, 330, 311], 0.06, 0.1, 0.05, 'square'); },
+  glug() { this.seq([180, 140, 200], 0.16, 0.2, 0.09); },
+  boing() { if (!settings.sounds) return; const c = this.ensure(); if (!c) return; const o = c.createOscillator(); o.type = 'triangle'; o.frequency.setValueAtTime(520, c.currentTime); o.frequency.exponentialRampToValueAtTime(130, c.currentTime + 0.28); const g = c.createGain(); g.gain.setValueAtTime(0.09, c.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.32); o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime + 0.34); },
+  knock() { if (!settings.sounds) return; this.burst(0.07, 200, 120, 0.3, 2); setTimeout(() => this.burst(0.07, 200, 120, 0.3, 2), 190); },
+  rattle() { if (!settings.sounds) return; [0, 70, 140, 230].forEach(d => setTimeout(() => this.burst(0.05, 1900, 1200, 0.1, 3), d)); },
+  whoosh() { if (settings.sounds) this.burst(0.5, 300, 1900, 0.11, 0.5); },
+  click() { if (settings.sounds) this.burst(0.03, 2600, 1800, 0.2, 4); },
   get noiseOn() { return !!this.noiseSrc; },
 };
 
@@ -242,7 +257,7 @@ function buildLeaf(i) {
   const dim = sc.dim ? ` style="--lx:${sc.dim.x}%;--ly:${sc.dim.y}%"` : '';
   const label = i === 0 ? 'Cover' : i === LAST ? 'The end' : `Page ${i} of ${LAST - 1}`;
   const who = settings.narrator === 'dad' ? 'Daddy’s voice' : settings.narrator === 'device' ? 'This device’s voice' : 'Storyteller';
-  leaf.innerHTML = `<div class="plate"><div class="stage"><div class="scene ${sc.root || ''}">${layers}</div><div class="dim"${dim}></div><div class="vignette"></div></div></div>
+  leaf.innerHTML = `<div class="plate"><div class="stage"><div class="scene ${sc.root || ''}">${layers}</div><div class="dim"${dim}></div><div class="tint"></div><div class="flash"></div><div class="vignette"></div></div></div>
     <div class="page-text"><div class="grain"></div><div class="page-head">${dayArc(i)}<span class="page-label">${label}</span></div><div class="stanza" aria-live="polite">${stanzaHTML(page, i)}</div><div class="page-foot"><span class="hint">${i === 0 ? 'Every word lights up as it’s read' : 'Tap any word to hear it'}</span><span class="credit">${i === 0 ? '' : who}</span></div></div>`;
   leaf._cues = Object.fromEntries(Object.entries(sc.cues || {}).map(([k, v]) => [coreOf(k), v])); leaf._fired = new Set(); leaf._page = i; leaf._mechs = sc.mechs || {};
   return leaf;
@@ -267,6 +282,7 @@ function fireCue(leaf, cue) {
     if (kind === 'flap') { openFlap(leaf, arg); continue; }
     if (kind === 'spin') { const w = $('[data-mech="wheel"]', leaf); if (w) tweenSpin(w, spinOf(w) + 360, 1600); continue; }
     if (kind === 'dim') { stage.classList.add('dimmed'); continue; }
+    if (kind === 'flash') { flashClass(stage, 'warm', 1700); continue; }
     if (kind === 'noise') { scene.classList.add('cue-noise'); if (settings.noise && !Sound.noiseOn) { Sound.noise(true); const m = $('.noise', leaf); m && m.classList.add('on'); } continue; }
     const name = kind === 'class' ? arg : kind;
     scene.classList.add('cue-' + name);
@@ -316,7 +332,7 @@ spread.addEventListener('pointermove', e => {
   const a = Math.atan2(e.clientY - wheel.cy, e.clientX - wheel.cx); let d = a - wheel.last; if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; wheel.last = a;
   const deg = d * 180 / Math.PI, now = performance.now(); wheel.moved += Math.abs(deg); wheel.v = deg / Math.max(1, now - wheel.t) * 16; wheel.t = now; setSpin(wheel.el, spinOf(wheel.el) + deg);
 });
-const endWheel = e => { if (!wheel || (e && e.pointerId !== wheel.id)) return; const w = wheel; wheel = null; Sound.ensure(); if (w.moved < 4) { Sound.chime([659.25, 783.99, 987.77]); tweenSpin(w.el, spinOf(w.el) + 360, 1500); } else coast(w.el, w.v); };
+const endWheel = e => { if (!wheel || (e && e.pointerId !== wheel.id)) return; const w = wheel; wheel = null; Sound.ensure(); state.wheelDragged = w.moved >= 4; if (w.moved < 4) { Sound.chime([659.25, 783.99, 987.77]); tweenSpin(w.el, spinOf(w.el) + 360, 1500); } else coast(w.el, w.v); };
 spread.addEventListener('pointerup', endWheel); spread.addEventListener('pointercancel', endWheel);
 function clearWords(leaf) { wordEls(leaf).forEach(w => w.classList.remove('on', 'read')); }
 
@@ -389,11 +405,11 @@ if (!canFS) btn('btnFull').hidden = true;
 btn('btnFull').addEventListener('click', () => { if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document); else (fsEl.requestFullscreen || fsEl.webkitRequestFullscreen).call(fsEl); });
 
 spread.addEventListener('click', e => {
-  const w = e.target.closest('.w'); if (w && state.leaf) { Sound.ensure(); const i = +w.dataset.i; startNarration(i, state.mode === 'read'); return; }
+  const w = e.target.closest('.w'); if (w && state.leaf) { Sound.ensure(); const i = +w.dataset.i; pokeWord(coreOf(w.textContent)); startNarration(i, state.mode === 'read'); return; }
   const act = e.target.closest('[data-act]'); if (act) { onAction(act.dataset.act); return; }
   const dot = e.target.closest('[data-go]'); if (dot) { go(+dot.dataset.go, +dot.dataset.go > state.page ? 1 : -1); return; }
   const flap = e.target.closest('[data-mech="flap"]'); if (flap) { toggleFlap(flap); return; }
-  const tap = e.target.closest('[data-tap]'); if (tap) onTap(tap);
+  const tap = e.target.closest('[data-tap]'); if (tap && !(state.wheelDragged && e.target.closest('[data-mech="wheel"]'))) onTap(tap); state.wheelDragged = false;
 });
 function onAction(a) {
   Sound.ensure();
@@ -402,13 +418,73 @@ function onAction(a) {
   if (a === 'again') go(0, 1);
   if (a === 'grown' || a === 'record') openModal(a === 'record');
 }
+/* what happens when you tap a thing: a tiny action language, one line per surprise */
+const TAPS = {
+  baby: ['hop', 'sound:giggle', 'spawn:note:4', 'bubble', 'face:1300', 'scene!clap:1600', 'scene!thought:2600'],
+  dad: ['hop', 'sound:hum', 'spawn:heart:4', 'scene!kissfly:1800', 'scene!wisp:1900', 'scene!spin:1300'],
+  bunny: ['flash:wiggle:1100', 'flash:hopto:1500', 'sound:boing', 'spawn:heart:3'],
+  ball: ['flash:tapped:1300', 'sound:boing'],
+  noise: ['noise'],
+  sun: ['toggle:lit', 'toggle:cool', 'sound:twinkle', 'scene!flock:7500', 'spawn:star:6'],
+  house: ['toggle:open', 'sound:boing', 'sound:lullaby'],
+  chimney: ['spawn:zzz:4', 'sound:hum'],
+  cloud: ['wobble', 'spawn:heart:6', 'sound:twinkle'],
+  crib: ['scene!rock:2500', 'sound:lullaby', 'scenetoggle:cribfloat'],
+  window: ['toggle:sing', 'sound:chirp', 'spawn:note:4'],
+  curtains: ['flash:gust:2500', 'sound:paper'],
+  orbit: ['flash:scatter:2500', 'sound:twinkle', 'spawn:star:5'],
+  plant: ['toggle:grown', 'sound:twinkle', 'spawn:star:5'],
+  door: ['wobble', 'sound:knock'],
+  rug: ['flash:ripple:1600', 'sound:twinkle'],
+  mat: ['flash:ripple:1600', 'sound:twinkle'],
+  shelf: ['flash:rattle:1200', 'sound:rattle'],
+  fruit: ['hop', 'sound:boing'],
+  spoon: ['flash:loop:1350', 'sound:whoosh', 'scene!yum:2000'],
+  tray: ['toggle:doodle', 'sound:twinkle'],
+  chair: ['wobble', 'sound:boing'],
+  armchair: ['wobble', 'sound:boing', 'spawn:zzz:2'],
+  blocks: ['toggle:flip', 'sound:rattle'],
+  sofa: ['toggle:peek', 'sound:boing', 'spawn:note:3'],
+  frames: ['flash:alive:2500', 'sound:twinkle'],
+  rainbow: ['flash:shimmer:2500', 'sound:twinkle', 'spawn:star:8'],
+  lamp: ['toggle:off', 'stagetoggle:dimmed', 'scenetoggle:dark2', 'sound:click'],
+  bookshelf: ['toggle:peek', 'sound:boing'],
+  moon: ['flash:yawning:1900', 'spawn:zzz:3', 'sound:hum', 'scene!shootnow:1600', 'scene!twinklefast:2500'],
+  thermo: ['scenetoggle:cold', 'stagetoggle:cold', 'sound:brr'],
+  nightlight: ['cycle:c1,c2,c3', 'sound:click'],
+  bottle: ['flash:fizz:2900', 'sound:glug'],
+  dream: ['flash:big:1900', 'spawn:heart:6', 'sound:twinkle'],
+  stars: ['toggle:lit', 'sound:twinkle', 'spawn:star:4'],
+  shh: ['flash:popped:900', 'sound:pop'],
+  grass: ['spawn:firefly:12', 'sound:twinkle'],
+};
+function flashClass(elm, cls, ms) { elm.classList.remove(cls); void elm.getBoundingClientRect(); elm.classList.add(cls); clearTimeout(elm['_t_' + cls]); elm['_t_' + cls] = setTimeout(() => elm.classList.remove(cls), ms); }
 function onTap(g) {
-  const kind = g.dataset.tap; const leaf = state.leaf; const r = g.getBoundingClientRect();
-  if (kind === 'ball') { g.classList.remove('tapped'); void g.getBBox(); g.classList.add('tapped'); setTimeout(() => g.classList.remove('tapped'), 1300); Sound.chime([392, 523.25]); return; }
-  if (kind === 'noise') { const on = !Sound.noiseOn; Sound.noise(on); g.classList.toggle('on', on); toast(on ? 'White noise on — a gentle hush, like the womb.' : 'White noise off.'); return; }
-  if (kind === 'baby') { spawn('note', r.left + r.width / 2, r.top + r.height * 0.2, 4); Sound.chime([880, 1046.5]); }
-  if (kind === 'dad') { spawn('heart', r.left + r.width / 2, r.top + r.height * 0.15, 4); }
-  g.classList.remove('prop-tapped'); void g.getBBox(); g.classList.add('prop-tapped'); setTimeout(() => g.classList.remove('prop-tapped'), 700);
+  const kind = g.dataset.tap, leaf = state.leaf, scene = $('.scene', leaf), stage = $('.stage', leaf), r = g.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height * 0.25;
+  Sound.ensure();
+  for (const act of TAPS[kind] || ['hop']) {
+    const [op, a, b] = act.split(':');
+    if (op === 'hop') flashClass(g, 'prop-tapped', 700);
+    else if (op === 'wobble') flashClass(g, 'wobble', 650);
+    else if (op === 'flash') flashClass(g, a, +b);
+    else if (op === 'toggle') g.classList.toggle(a);
+    else if (op === 'cycle') { const cs = a.split(','); const i = cs.findIndex(c => g.classList.contains(c)); g.classList.remove(...cs); g.classList.add(cs[(i + 1) % cs.length]); }
+    else if (op === 'scene!') flashClass(scene, 'cue-' + a, +b);
+    else if (op === 'scenetoggle') scene.classList.toggle('cue-' + a);
+    else if (op === 'stagetoggle') stage.classList.toggle(a);
+    else if (op === 'sound' && Sound[a]) Sound[a]();
+    else if (op === 'spawn') spawn(a, cx, cy, +b);
+    else if (op === 'bubble') { const bb = $('.bubble', leaf); if (bb) flashClass(bb, 'show', 1500); }
+    else if (op === 'face') { const f = $('.face', g); if (f) flashClass(f, 'alt', +a); }
+    else if (op === 'noise') { const on = !Sound.noiseOn; Sound.noise(on); g.classList.toggle('on', on); toast(on ? 'White noise on — a gentle hush, like the womb.' : 'White noise off.'); }
+  }
+}
+/* the words know their pictures: tap a word and the thing it names answers back */
+const WORD_TARGETS = { crib: '.crib', thumb: '.thumb', mobile: '.hang', bib: '.baby', bowl: '.lidflap', spoon: '.spoon', chair: '.chair, .armchair', tummy: '.baby', ball: '.ball', sun: '.sun', sunny: '.sun', rainbow: '.rainbow', room: '.window', window: '.window', lamp: '.lamp', story: '.book', book: '.book', read: '.book', shoulder: '.dad', sack: '.sack', bottle: '.bottle', milk: '.milk', moon: '.moon', kisses: '.dad', daddy: '.dad', eyes: '.face', nose: '.face', door: '.door, .flap.door', bunny: '.bunny', 'shhh’s': '.shh', noise: '.noise', dreaming: '.dream', dance: '.dad', sing: '.dad', house: '.house', rub: '.rub', food: '.lidflap', hide: '.flap.door', side: '.roll' };
+function pokeWord(word) {
+  const sel = WORD_TARGETS[word]; if (!sel || !state.leaf) return; const t = $(sel, state.leaf); if (!t) return;
+  flashClass(t, 'prop-tapped', 700); const r = t.getBoundingClientRect(); spawn('star', r.left + r.width / 2, r.top + r.height / 2, 5);
 }
 document.addEventListener('keydown', e => {
   if (!$('#modal').hidden) { if (e.key === 'Escape') closeModal(); return; }
@@ -420,7 +496,7 @@ document.addEventListener('keydown', e => {
 });
 let sw = null;
 spread.addEventListener('pointerdown', e => { if (e.target.closest('button, .w, [data-tap], [data-go], [data-mech], .tab')) return; sw = { x: e.clientX, y: e.clientY, t: Date.now() }; });
-spread.addEventListener('pointerup', e => { if (!sw) return; const dx = e.clientX - sw.x, dy = e.clientY - sw.y, dt = Date.now() - sw.t; sw = null; if (Math.abs(dx) > 60 && Math.abs(dy) < 90 && dt < 900) go(state.page + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1); });
+spread.addEventListener('pointerup', e => { if (!sw) return; const dx = e.clientX - sw.x, dy = e.clientY - sw.y, dt = Date.now() - sw.t; sw = null; if (Math.abs(dx) > 60 && Math.abs(dy) < 90 && dt < 900) go(state.page + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1); else if (Math.abs(dx) < 8 && Math.abs(dy) < 8 && dt < 600 && e.target.closest('.stage')) { Sound.ensure(); spawn('star', e.clientX, e.clientY, 7); Sound.twinkle(); } });
 spread.addEventListener('pointercancel', () => { sw = null; });
 
 /* ---------- parallax: pointer, tilt, and a slow idle drift ---------- */

@@ -374,3 +374,109 @@ body { touch-action: manipulation; }
 @keyframes hover { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-12px) rotate(.6deg); } }
 .anim-shoot { animation: shoot 14s ease-in infinite; opacity: 0; }
 @keyframes shoot { 0%, 78% { transform: translate(0, 0); opacity: 0; } 80% { opacity: 1; } 90%, 100% { transform: translate(-260px, 130px); opacity: 0; } }
+/* ---------- surprises: tap anything ---------- */
+.stage .tint { position: absolute; inset: 0; pointer-events: none; background: #6FB7FF; mix-blend-mode: multiply; opacity: 0; transition: opacity .9s; }
+.stage.cold .tint { opacity: .38; }
+.stage .flash { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 40%, rgba(255, 236, 170, .95), rgba(255, 236, 170, 0) 70%); opacity: 0; }
+.stage.warm .flash { animation: warmflash 1.6s ease-out; }
+@keyframes warmflash { 0% { opacity: 0; } 25% { opacity: .85; } 100% { opacity: 0; } }
+.bubble { opacity: 0; transform: scale(0); transform-origin: 50% 100%; transition: opacity .2s, transform .4s cubic-bezier(.3, 1.6, .5, 1); }
+.bubble.show { opacity: 1; transform: scale(1); }
+.face.alt .fb { opacity: 1 !important; } .face.alt .fa { opacity: 0 !important; }
+.wobble { animation: wobble .6s ease-in-out; }
+@keyframes wobble { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+.sunface { opacity: 0; transition: opacity .5s; } .sun.lit .sunface { opacity: 1; }
+.sun.lit ~ .anim-spin, .sun.lit { }
+.shades { opacity: 0; transform: translateY(-40px); transition: opacity .3s, transform .5s cubic-bezier(.3, 1.5, .5, 1); } .sun.cool .shades { opacity: 1; transform: none; }
+.winkeye { transform-origin: 50% 50%; } .sun.lit .winkeye { animation: wink 1.2s ease-in-out; }
+@keyframes wink { 0%, 100% { transform: scaleY(1); } 30%, 60% { transform: scaleY(.1); } }
+.flock { opacity: 0; } .cue-flock .flock { opacity: 1; }
+.anim-flyfast { animation: fly 7s linear 1; }
+.house .hbunny { transform: translate(0, 40px) scale(0); transition: transform .8s .3s cubic-bezier(.3, 1.5, .5, 1); }
+.house.open .hbunny { transform: translate(52px, -6px) scale(1); }
+.house .hdoor .lid { transform-origin: 0 50%; transition: transform .7s cubic-bezier(.3, 1.2, .4, 1); }
+.house.open .hdoor .lid { transform: perspective(300px) rotateY(-108deg); }
+.house .silhouette { opacity: 0; transition: opacity .8s .3s; } .house.open .silhouette { opacity: 1; }
+.sc-end .house.open .lit { opacity: 1 !important; }
+.ears { transform-origin: 50% 100%; } .bunny.wiggle .ears { animation: earwiggle .5s ease-in-out 2; }
+@keyframes earwiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }
+.bunny.hopto { animation: hopto 1.4s ease-in-out; }
+@keyframes hopto { 0%, 100% { transform: translate(0, 0); } 20% { transform: translate(60px, -40px); } 40% { transform: translate(120px, 0); } 60% { transform: translate(180px, -40px); } 80% { transform: translate(120px, 0) rotate(-6deg); } }
+.cue-rock .crib, .cue-rock .roll { animation: cribrock 2.4s ease-in-out; transform-origin: 50% 100%; }
+@keyframes cribrock { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-3.5deg); } 50% { transform: rotate(3.5deg); } 80% { transform: rotate(-2deg); } }
+.cue-stretch .stretch { animation-duration: .9s; }
+.perch { opacity: 0; transform: translateY(-60px); transition: opacity .3s, transform .6s cubic-bezier(.3, 1.4, .5, 1); }
+.window.sing .perch { opacity: 1; transform: none; }
+.window.sing .perch path:first-child { animation: wing .3s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+.curtains.gust .anim-sway-soft { animation: gust 1.2s ease-in-out 2; }
+@keyframes gust { 0%, 100% { transform: skewX(0); } 50% { transform: skewX(9deg) translateX(12px); } }
+.orbit.scatter .anim-orbit { }
+.orbit.scatter path { animation: scatter 2.4s ease-in-out; }
+@keyframes scatter { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(0, -160px) scale(1.6); } }
+.bloom { transform: scale(0); transform-origin: 50% 100%; transition: transform .8s cubic-bezier(.3, 1.6, .5, 1); }
+.plant.grown .bloom { transform: scale(1); }
+.rings ellipse { opacity: 0; }
+.rug.ripple .rings ellipse { animation: ringwave 1.5s ease-out; }
+@keyframes ringwave { 0% { transform: scale(.4); opacity: .9; } 100% { transform: scale(3.2); opacity: 0; } }
+.jar { transform-origin: 50% 100%; }
+.shelf.rattle .jar { animation: jarhop .5s cubic-bezier(.3, 1.5, .5, 1); }
+@keyframes jarhop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px) rotate(-3deg); } }
+.shelf.rattle .jar:nth-child(3) .jarlid { animation: lidpop 1.1s ease-out; }
+@keyframes lidpop { 0%, 100% { transform: translateY(0) rotate(0); } 35% { transform: translateY(-46px) rotate(-30deg); } 70% { transform: translateY(-10px) rotate(10deg); } }
+.spoon.loop { animation: spoonloop 1.3s ease-in-out; }
+@keyframes spoonloop { 0% { transform: translate(0, 0) rotate(0); } 50% { transform: translate(-70px, -120px) rotate(-360deg); } 100% { transform: translate(0, 0) rotate(-720deg); } }
+.scene.cue-yum { --alt: 1; }
+.chalk { stroke-dasharray: 80; stroke-dashoffset: 80; opacity: 0; }
+.tray.doodle .chalk { animation: chalk 1.2s ease-out forwards; }
+.tray.doodle .chalk:nth-child(2) { animation-delay: .25s; } .tray.doodle .chalk:nth-child(3) { animation-delay: .5s; } .tray.doodle .chalk:nth-child(4) { animation-delay: .8s; }
+@keyframes chalk { 0% { stroke-dashoffset: 80; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 1; } }
+.blk { transform-origin: 50% 50%; } .blocks .back { opacity: 0; }
+.blocks.flip .blk { animation: blkflip .9s ease-in-out; }
+.blocks.flip .blk:nth-of-type(2) { animation-delay: .12s; } .blocks.flip .blk:nth-of-type(3) { animation-delay: .24s; }
+.blocks.flip .front { opacity: 0; transition: opacity 0s .45s; } .blocks.flip .back { opacity: 1; transition: opacity 0s .45s; }
+@keyframes blkflip { 0% { transform: perspective(300px) rotateY(0); } 50% { transform: perspective(300px) rotateY(90deg) translateY(-30px); } 100% { transform: perspective(300px) rotateY(0); } }
+.cushion { transition: transform .7s cubic-bezier(.3, 1.3, .4, 1); transform-origin: 50% 100%; }
+.sofa.peek .cushion { transform: translateY(-62px) rotate(-16deg); }
+.duck { transition: transform .8s .15s cubic-bezier(.3, 1.5, .5, 1); } .sofa.peek .duck { transform: translateY(-44px); }
+.frames.alive .fheart { animation: heartbeat 1s ease-in-out 2; }
+.frames.alive .fsun { animation: spin 2.4s ease-in-out; }
+.rainbow.shimmer .band { animation: shimmer 1.2s ease-in-out 2; }
+@keyframes shimmer { 0%, 100% { opacity: .85; } 50% { opacity: .2; } }
+.cue-clap .armL { animation: clapL .3s ease-in-out 5 alternate !important; } .cue-clap .armR { animation: clapR .3s ease-in-out 5 alternate !important; }
+@keyframes clapL { from { transform: rotate(0); } to { transform: rotate(40deg); } } @keyframes clapR { from { transform: rotate(0); } to { transform: rotate(-40deg); } }
+.cue-spin .dad { animation: dadspin 1.2s ease-in-out; }
+@keyframes dadspin { 0% { transform: perspective(900px) rotateY(0); } 100% { transform: perspective(900px) rotateY(360deg); } }
+.glow { transition: opacity .6s; } .lamp.off .glow { opacity: 0 !important; }
+.glowstars { opacity: 0; transition: opacity 1s; } .cue-dark2 .glowstars { opacity: 1; }
+.cue-quiet .glow { opacity: .55; }
+.bookshelf .slidebook { transition: transform .6s cubic-bezier(.3, 1.4, .5, 1); }
+.bookshelf.peek .slidebook { transform: translateY(-26px); }
+.bookshelf .bear { opacity: 0; transform: translateY(20px); transition: opacity .4s .3s, transform .7s .3s cubic-bezier(.3, 1.5, .5, 1); }
+.bookshelf.peek .bear { opacity: 1; transform: translateY(-58px); }
+.yawn { opacity: 0; } .moon.yawning .smile { opacity: 0; } .moon.yawning .yawn { opacity: 1; }
+.moon.yawning { animation: hop .7s cubic-bezier(.3, 1.4, .5, 1); }
+.nightlight .bulb { transition: fill .6s; } .nightlight.c1 .bulb { fill: #FFB3C6; } .nightlight.c2 .bulb { fill: #9FD8FF; } .nightlight.c3 .bulb { fill: #B9F2B0; }
+.bub { opacity: 0; } .bottle.fizz .bub { animation: bubbleUp 1.4s ease-out 2; }
+@keyframes bubbleUp { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: .95; } 100% { transform: translateY(-34px); opacity: 0; } }
+.cue-dream .dream.big { transform: scale(1.18); }
+.cribcloud { opacity: 0; transition: opacity .8s; } .cue-cribfloat .cribcloud { opacity: 1; }
+.cue-cribfloat .crib { transform: translateY(-40px); transition: transform .9s cubic-bezier(.3, 1.3, .4, 1); }
+.crib { transition: transform .9s cubic-bezier(.3, 1.3, .4, 1); }
+.kissfly { opacity: 0; } .cue-kissfly .kissfly { animation: kissfly 1.7s ease-in-out forwards; }
+@keyframes kissfly { 0% { transform: translate(0, 0) scale(.4); opacity: 0; } 15% { opacity: 1; } 50% { transform: translate(170px, -80px) scale(1.1); } 100% { transform: translate(330px, 70px) scale(1.3); opacity: 0; } }
+.wisp { opacity: 0; } .cue-wisp .wisp { animation: wispy 1.8s ease-in-out; }
+@keyframes wispy { 0% { transform: translate(0, 0); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(-40px, -90px); opacity: 0; } }
+.thought { opacity: 0; transform: scale(0); transform-origin: 0 100%; transition: opacity .3s, transform .6s cubic-bezier(.3, 1.5, .5, 1); }
+.cue-thought .thought { opacity: 1; transform: scale(1); }
+.cline { stroke-dasharray: 220; stroke-dashoffset: 220; opacity: 0; }
+.constellation.lit .cline { animation: drawline .9s ease-out forwards; }
+.constellation.lit path { animation: twinkle .7s ease-in-out 3; }
+@keyframes drawline { 0% { stroke-dashoffset: 220; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 1; } }
+.shootnow { opacity: 0; } .cue-shootnow .shootnow { animation: shootonce 1.5s ease-in forwards; }
+@keyframes shootonce { 0% { transform: translate(0, 0); opacity: 0; } 10% { opacity: 1; } 100% { transform: translate(-300px, 150px); opacity: 0; } }
+.shh.popped { animation: shhpop2 .9s ease-out; }
+@keyframes shhpop2 { 0% { transform: scale(1); } 40% { transform: scale(1.5) rotate(10deg); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
+.cue-full .sack { animation: sackglow 1.2s ease-in-out 2; }
+@keyframes sackglow { 0%, 100% { fill: var(--sack); } 50% { fill: #E4D6FF; } }
+.cue-twinklefast .anim-twinkle { animation-duration: .7s; }
+.armchair.wobble { animation: rock 1.2s ease-in-out; }
