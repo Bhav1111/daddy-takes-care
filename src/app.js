@@ -12,6 +12,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const LITE = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory && navigator.deviceMemory <= 3);
 const coreOf = w => w.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}’']+$/gu, '').toLowerCase();
 const speakText = s => s.replace(/shhh’s/gi, 'shushes').replace(/’/g, "'");
 const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
@@ -90,6 +91,11 @@ const Sound = {
       setTimeout(() => { try { s.stop(); } catch {} }, 1000); this.noiseSrc = null; this.noiseGain = null;
     }
   },
+  burst(dur, f0, f1, gain, q = 0.8) { const c = this.ensure(); if (!c) return; const len = Math.floor(c.sampleRate * dur), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < len; i++) { const t = i / len; d[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 1.5) * (t < 0.05 ? t / 0.05 : 1); } const src = c.createBufferSource(); src.buffer = buf; const f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = q; f.frequency.setValueAtTime(f0, c.currentTime); f.frequency.exponentialRampToValueAtTime(f1, c.currentTime + dur); const g = c.createGain(); g.gain.value = gain; src.connect(f).connect(g).connect(c.destination); src.start(); },
+  paper() { if (settings.sounds) this.burst(0.16, 900, 2200, 0.09); },
+  flip() { if (settings.sounds) this.burst(0.22, 700, 1600, 0.12); },
+  pop() { if (!settings.sounds) return; const c = this.ensure(); if (!c) return; const o = c.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(240, c.currentTime); o.frequency.exponentialRampToValueAtTime(520, c.currentTime + 0.12); const g = c.createGain(); g.gain.setValueAtTime(0.0001, c.currentTime); g.gain.exponentialRampToValueAtTime(0.14, c.currentTime + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.3); o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime + 0.32); },
+  rise() { if (!settings.sounds) return; [0, 140, 300].forEach((d, i) => setTimeout(() => this.burst(0.28, 400 + i * 200, 1400 + i * 300, 0.07, 0.6), d)); },
   get noiseOn() { return !!this.noiseSrc; },
 };
 
@@ -232,13 +238,13 @@ function stanzaHTML(page, i) {
 function buildLeaf(i) {
   const page = PAGES[i], sc = Art.SCENES[page.scene]();
   const leaf = el('div', `leaf enter tone-${page.tone}`);
-  const layers = sc.layers.map(l => `<div class="layer" style="--z:${l.z}"><svg viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">${l.svg}</svg></div>`).join('');
+  const layers = sc.layers.map((l, k) => `<div class="layer${l.shadow ? ' shadow' : ''}" style="--z:${l.z}"><div class="rise" style="transition-delay:${200 + k * 70}ms"><svg viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">${l.svg}</svg></div></div>`).join('');
   const dim = sc.dim ? ` style="--lx:${sc.dim.x}%;--ly:${sc.dim.y}%"` : '';
   const label = i === 0 ? 'Cover' : i === LAST ? 'The end' : `Page ${i} of ${LAST - 1}`;
   const who = settings.narrator === 'dad' ? 'Daddy’s voice' : settings.narrator === 'device' ? 'This device’s voice' : 'Storyteller';
-  leaf.innerHTML = `<div class="plate"><div class="stage"><div class="scene">${layers}</div><div class="dim"${dim}></div><div class="vignette"></div></div></div>
+  leaf.innerHTML = `<div class="plate"><div class="stage"><div class="scene ${sc.root || ''}">${layers}</div><div class="dim"${dim}></div><div class="vignette"></div></div></div>
     <div class="page-text"><div class="grain"></div><div class="page-head">${dayArc(i)}<span class="page-label">${label}</span></div><div class="stanza" aria-live="polite">${stanzaHTML(page, i)}</div><div class="page-foot"><span class="hint">${i === 0 ? 'Every word lights up as it’s read' : 'Tap any word to hear it'}</span><span class="credit">${i === 0 ? '' : who}</span></div></div>`;
-  leaf._cues = Object.fromEntries(Object.entries(sc.cues || {}).map(([k, v]) => [coreOf(k), v])); leaf._fired = new Set(); leaf._page = i;
+  leaf._cues = Object.fromEntries(Object.entries(sc.cues || {}).map(([k, v]) => [coreOf(k), v])); leaf._fired = new Set(); leaf._page = i; leaf._mechs = sc.mechs || {};
   return leaf;
 }
 const wordEls = leaf => leaf._words || (leaf._words = [...leaf.querySelectorAll('.w')]);
@@ -255,12 +261,63 @@ function markWord(leaf, i) {
 }
 function fireCue(leaf, cue) {
   const scene = $('.scene', leaf), stage = $('.stage', leaf);
-  if (cue === 'dark') { stage.classList.add('dimmed'); return; }
-  if (cue === 'noise') { scene.classList.add('cue-noise'); if (settings.noise && !Sound.noiseOn) { Sound.noise(true); const m = $('.noise', leaf); m && m.classList.add('on'); } return; }
-  scene.classList.add('cue-' + cue);
-  if (cue === 'poof') { const r = stage.getBoundingClientRect(); spawn('poof', r.left + r.width * 0.42, r.top + r.height * 0.45, 12); }
-  if (cue === 'sparkle' || cue === 'twinkle') Sound.chime([783.99, 1046.5, 1318.5]);
+  for (const part of String(cue).split('+')) {
+    const [kind, arg] = part.split(':');
+    if (kind === 'pull') { autoPull(leaf); continue; }
+    if (kind === 'flap') { openFlap(leaf, arg); continue; }
+    if (kind === 'spin') { const w = $('[data-mech="wheel"]', leaf); if (w) tweenSpin(w, spinOf(w) + 360, 1600); continue; }
+    if (kind === 'dim') { stage.classList.add('dimmed'); continue; }
+    if (kind === 'noise') { scene.classList.add('cue-noise'); if (settings.noise && !Sound.noiseOn) { Sound.noise(true); const m = $('.noise', leaf); m && m.classList.add('on'); } continue; }
+    const name = kind === 'class' ? arg : kind;
+    scene.classList.add('cue-' + name);
+    if (name === 'poof') { const r = stage.getBoundingClientRect(); spawn('poof', r.left + r.width * 0.42, r.top + r.height * 0.45, 12); }
+    if (name === 'sparkle' || name === 'twinkle') Sound.chime([783.99, 1046.5, 1318.5]);
+  }
 }
+
+/* ---------- pop-up mechanics: pull tabs, flaps, wheels ---------- */
+function setupMechs(leaf) {
+  const stage = $('.stage', leaf), m = leaf._mechs || {};
+  leaf._mech = { pull: 0, raf: 0 };
+  if (m.pull) {
+    const tab = el('button', 'tab' + (state.tabHinted ? '' : ' hint'), '<span>pull</span>'); state.tabHinted = true;
+    tab.setAttribute('aria-label', 'Pull tab: ' + (m.pull.hint || 'moves the picture'));
+    stage.append(tab);
+    let drag = null;
+    tab.addEventListener('pointerdown', e => { e.preventDefault(); try { tab.setPointerCapture(e.pointerId); } catch {} drag = { x: e.clientX, from: leaf._mech.pull, id: e.pointerId }; cancelAnimationFrame(leaf._mech.raf); tab.classList.add('grab'); tab.classList.remove('hint'); Sound.ensure(); Sound.paper(); });
+    tab.addEventListener('pointermove', e => { if (!drag || e.pointerId !== drag.id) return; setPull(leaf, clamp(drag.from + (drag.x - e.clientX) / 110, 0, 1)); });
+    const release = e => { if (!drag || (e && e.pointerId !== drag.id)) return; drag = null; tab.classList.remove('grab'); if (leaf._mech.pull > 0.96) { Sound.pop(); tweenPull(leaf, 0, 700, 900); } else tweenPull(leaf, 0, 500); };
+    tab.addEventListener('pointerup', release); tab.addEventListener('pointercancel', release);
+    tab.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); Sound.ensure(); autoPull(leaf); } });
+  }
+}
+function setPull(leaf, p) { leaf._mech.pull = p; const sc = $('.scene', leaf); if (sc) sc.style.setProperty('--pull', p.toFixed(3)); const tab = $('.tab', leaf); if (tab) tab.style.transform = `translateX(${(-p * 64).toFixed(1)}px)`; }
+function tweenPull(leaf, to, dur, delay = 0) {
+  cancelAnimationFrame(leaf._mech.raf); const from = leaf._mech.pull, t0 = performance.now() + delay;
+  const step = now => { if (now < t0) { leaf._mech.raf = requestAnimationFrame(step); return; } const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); setPull(leaf, from + (to - from) * e); if (k < 1) leaf._mech.raf = requestAnimationFrame(step); };
+  leaf._mech.raf = requestAnimationFrame(step);
+}
+function autoPull(leaf) { if (!leaf._mech) return; const tab = $('.tab', leaf); if (tab) tab.classList.remove('hint'); Sound.paper(); tweenPull(leaf, 1, 800); setTimeout(() => { if (leaf === state.leaf) { Sound.pop(); tweenPull(leaf, 0, 800, 900); } }, 850); }
+function openFlap(leaf, name) { const f = name ? $(`[data-mech="flap"].${name}`, leaf) : $('[data-mech="flap"]', leaf); if (f && !f.classList.contains('open')) { f.classList.add('open'); Sound.flip(); } }
+function toggleFlap(f) { f.classList.toggle('open'); Sound.ensure(); Sound.flip(); }
+const spinOf = w => parseFloat(w.style.getPropertyValue('--spin')) || 0;
+const setSpin = (w, v) => w.style.setProperty('--spin', v.toFixed(2) + 'deg');
+function coast(w, v) { cancelAnimationFrame(w._raf); const step = () => { v *= 0.965; setSpin(w, spinOf(w) + v); if (Math.abs(v) > 0.05) w._raf = requestAnimationFrame(step); }; w._raf = requestAnimationFrame(step); }
+function tweenSpin(w, to, dur) { cancelAnimationFrame(w._raf); const from = spinOf(w), t0 = performance.now(); const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); setSpin(w, from + (to - from) * e); if (k < 1) w._raf = requestAnimationFrame(step); }; w._raf = requestAnimationFrame(step); }
+let wheel = null;
+spread.addEventListener('pointerdown', e => {
+  const w = e.target.closest('[data-mech="wheel"]'); if (!w) return;
+  e.preventDefault(); const r = w.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  wheel = { el: w, cx, cy, last: Math.atan2(e.clientY - cy, e.clientX - cx), v: 0, moved: 0, t: performance.now(), id: e.pointerId };
+  cancelAnimationFrame(w._raf); try { w.setPointerCapture(e.pointerId); } catch {}
+});
+spread.addEventListener('pointermove', e => {
+  if (!wheel || e.pointerId !== wheel.id) return;
+  const a = Math.atan2(e.clientY - wheel.cy, e.clientX - wheel.cx); let d = a - wheel.last; if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; wheel.last = a;
+  const deg = d * 180 / Math.PI, now = performance.now(); wheel.moved += Math.abs(deg); wheel.v = deg / Math.max(1, now - wheel.t) * 16; wheel.t = now; setSpin(wheel.el, spinOf(wheel.el) + deg);
+});
+const endWheel = e => { if (!wheel || (e && e.pointerId !== wheel.id)) return; const w = wheel; wheel = null; Sound.ensure(); if (w.moved < 4) { Sound.chime([659.25, 783.99, 987.77]); tweenSpin(w.el, spinOf(w.el) + 360, 1500); } else coast(w.el, w.v); };
+spread.addEventListener('pointerup', endWheel); spread.addEventListener('pointercancel', endWheel);
 function clearWords(leaf) { wordEls(leaf).forEach(w => w.classList.remove('on', 'read')); }
 
 /* ---------- narration control ---------- */
@@ -294,12 +351,16 @@ async function go(i, dir = 1) {
   clearTimeout(state.autoTimer); clip.stop(); device.stop();
   state.turning = true;
   const old = state.leaf, leaf = buildLeaf(i), tone = PAGES[i].tone;
-  book.className = `book tone-${tone}${i === 0 ? ' cover' : ''}`;
+  leaf.classList.add('folded');
+  book.className = `book tone-${tone}${i === 0 ? ' cover' : ''}${LITE ? ' lite' : ''}`;
   if (!/dusk|night/.test(tone) && Sound.noiseOn) Sound.noise(false);
   if (!old) spread.append(leaf);
-  else if (dir >= 0) { spread.insertBefore(leaf, old); old.classList.add('turn-out'); }
-  else { spread.append(leaf); leaf.classList.add('turn-in'); }
+  else if (dir >= 0) { spread.insertBefore(leaf, old); old.classList.add('turn-out', 'folding'); }
+  else { spread.append(leaf); leaf.classList.add('turn-in'); old.classList.add('folding'); }
+  setupMechs(leaf);
+  void leaf.offsetWidth; leaf.classList.remove('folded'); setTimeout(() => Sound.rise(), 150);
   if (old) Sound.turn();
+  if (i === 1 && !state.hinted) { state.hinted = true; setTimeout(() => toast('Pull the paper tab, lift the flaps, spin the sun.', 4200), 1600); }
   state.leaf = leaf; state.page = i; updateControls();
   await wait(old ? (REDUCED ? 380 : 920) : 50);
   if (old) old.remove(); leaf.classList.remove('turn-in'); state.turning = false;
@@ -331,6 +392,7 @@ spread.addEventListener('click', e => {
   const w = e.target.closest('.w'); if (w && state.leaf) { Sound.ensure(); const i = +w.dataset.i; startNarration(i, state.mode === 'read'); return; }
   const act = e.target.closest('[data-act]'); if (act) { onAction(act.dataset.act); return; }
   const dot = e.target.closest('[data-go]'); if (dot) { go(+dot.dataset.go, +dot.dataset.go > state.page ? 1 : -1); return; }
+  const flap = e.target.closest('[data-mech="flap"]'); if (flap) { toggleFlap(flap); return; }
   const tap = e.target.closest('[data-tap]'); if (tap) onTap(tap);
 });
 function onAction(a) {
@@ -344,7 +406,6 @@ function onTap(g) {
   const kind = g.dataset.tap; const leaf = state.leaf; const r = g.getBoundingClientRect();
   if (kind === 'ball') { g.classList.remove('tapped'); void g.getBBox(); g.classList.add('tapped'); setTimeout(() => g.classList.remove('tapped'), 1300); Sound.chime([392, 523.25]); return; }
   if (kind === 'noise') { const on = !Sound.noiseOn; Sound.noise(on); g.classList.toggle('on', on); toast(on ? 'White noise on — a gentle hush, like the womb.' : 'White noise off.'); return; }
-  if (kind === 'mobile') { Sound.chime([659.25, 783.99, 987.77, 1318.5]); }
   if (kind === 'baby') { spawn('note', r.left + r.width / 2, r.top + r.height * 0.2, 4); Sound.chime([880, 1046.5]); }
   if (kind === 'dad') { spawn('heart', r.left + r.width / 2, r.top + r.height * 0.15, 4); }
   g.classList.remove('prop-tapped'); void g.getBBox(); g.classList.add('prop-tapped'); setTimeout(() => g.classList.remove('prop-tapped'), 700);
@@ -358,7 +419,7 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'Home') go(0, -1);
 });
 let sw = null;
-spread.addEventListener('pointerdown', e => { if (e.target.closest('button, .w, [data-tap], [data-go]')) return; sw = { x: e.clientX, y: e.clientY, t: Date.now() }; });
+spread.addEventListener('pointerdown', e => { if (e.target.closest('button, .w, [data-tap], [data-go], [data-mech], .tab')) return; sw = { x: e.clientX, y: e.clientY, t: Date.now() }; });
 spread.addEventListener('pointerup', e => { if (!sw) return; const dx = e.clientX - sw.x, dy = e.clientY - sw.y, dt = Date.now() - sw.t; sw = null; if (Math.abs(dx) > 60 && Math.abs(dy) < 90 && dt < 900) go(state.page + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1); });
 spread.addEventListener('pointercancel', () => { sw = null; });
 

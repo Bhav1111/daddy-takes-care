@@ -5,7 +5,9 @@ Words by Baruch Havia.
 
 **Read it:** https://bhav1111.github.io/daddy-takes-care/
 
-The book reads itself aloud, lights up every word as it is spoken, layers each scene in 3D, and lets Dad record his own narration (recordings stay on the device).
+The book reads itself aloud, lights up every word as it is spoken, and lets Dad record his own narration (recordings stay on the device).
+
+It is built like a pop-up book: each page's cut-paper layers unfold when the page opens, every page has a pull tab that moves the picture (the story pulls it by itself at the right word), there are flaps to lift (a door, a bowl lid, a curtain, Dad's storybook, a moon that hides a sleeping sun) and wheels to spin (suns, a mobile, the night sky).
 
 ## Layout
 
